@@ -757,10 +757,11 @@ export default function Home() {
                   glareColor="rgba(255, 255, 255, 0.1)"
                 >
                   <div className="relative bg-white/60 backdrop-blur-xl border-2 border-transparent rounded-2xl shadow-xl p-8 flex flex-col gap-4 transition-all duration-300 hover:shadow-2xl hover:bg-white/80 group animated-gradient-border">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-4">
                       <span className="inline-flex items-center justify-center h-12 w-12 border-2 border-indigo-200 rounded-full bg-white/50 backdrop-blur-sm">
                         {theme.icon}
                       </span>
+                      <h3 className="text-xl font-semibold text-gray-900">{theme.title}</h3>
                     </div>
                     <ul className="space-y-2 mt-2">
                       {/* Afficher d'abord les compétences mockées */}
@@ -803,9 +804,6 @@ export default function Home() {
                         </li>
                       ))}
                     </ul>
-                    <span className="absolute top-0 right-0 m-4 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-indigo-100 to-pink-100 text-indigo-500 shadow-sm animate-badge-pop">
-                      {theme.title.split(' ')[0]}
-                    </span>
                     <div className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-transparent animated-gradient-border z-10" />
                   </div>
                 </ParallaxTilt>
