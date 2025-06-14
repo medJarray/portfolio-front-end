@@ -56,7 +56,7 @@ export const api = {
 
   updateExperience: async (id: number, experience: Partial<Experience>): Promise<Experience> => {
     const response = await fetch(`${API_URL}/experiences/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(experience),
     });
@@ -73,13 +73,13 @@ export const api = {
 
   // Degrees
   getDegrees: async (): Promise<Degree[]> => {
-    const response = await fetch(`${API_URL}/degrees`);
+    const response = await fetch(`${API_URL}/education`);
     if (!response.ok) throw new Error('Failed to fetch degrees');
     return response.json();
   },
 
   createDegree: async (degree: Partial<Degree>): Promise<Degree> => {
-    const response = await fetch(`${API_URL}/degrees`, {
+    const response = await fetch(`${API_URL}/education`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(degree),
@@ -89,8 +89,8 @@ export const api = {
   },
 
   updateDegree: async (id: number, degree: Partial<Degree>): Promise<Degree> => {
-    const response = await fetch(`${API_URL}/degrees/${id}`, {
-      method: 'PUT',
+    const response = await fetch(`${API_URL}/education/${id}`, {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(degree),
     });
@@ -99,7 +99,7 @@ export const api = {
   },
 
   deleteDegree: async (id: number): Promise<void> => {
-    const response = await fetch(`${API_URL}/degrees/${id}`, {
+    const response = await fetch(`${API_URL}/education/${id}`, {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete degree');

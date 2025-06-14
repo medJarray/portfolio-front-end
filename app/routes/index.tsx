@@ -1,14 +1,88 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowDownIcon, CodeBracketIcon, CommandLineIcon, DevicePhoneMobileIcon, ServerIcon, BriefcaseIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
-import { Mail, Download, Code2, Database, Settings, Briefcase, GraduationCap, Wrench, Users, Lightbulb, GitBranch, Ship, Cloud, Link2, BookOpen, MessageCircle, UserCheck, ListChecks, Send, Github, Linkedin, Star } from 'lucide-react';
+import { Mail, Download, Code2, Database, Settings, Briefcase, GraduationCap, Wrench, Users, Lightbulb, GitBranch, Ship, Cloud, Link2, BookOpen, MessageCircle, UserCheck, ListChecks, Send, Github, Linkedin, Star, ArrowRightCircle, Sparkles, Code, Cpu, Terminal, Brain, Palette, Server, Globe, ChevronDown } from 'lucide-react';
 import ParallaxTilt from 'react-parallax-tilt';
 import Particles from 'react-tsparticles';
 import * as tsparticlesEngine from '@tsparticles/engine';
 import { LinkedinLogo, WhatsappLogo, EnvelopeSimple } from 'phosphor-react';
-import { Brain } from 'lucide-react';
 import { api } from '../services/api';
-import { Palette, Server, Terminal } from 'lucide-react';
+
+type Language = 'fr' | 'en' | 'ar';
+
+interface Experience {
+  id: number;
+  title: string;
+  company: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+  technologies: string[];
+}
+
+interface Degree {
+  id: number;
+  degree: string;
+  school: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+interface Skill {
+  id: number;
+  name: string;
+  category: string;
+  description: string;
+  level: number;
+}
+
+interface Translations {
+  [key: string]: {
+    skills: string;
+    loading: string;
+    error: string;
+    beginner: string;
+    intermediate: string;
+    advanced: string;
+  };
+}
+
+interface SkillLevels {
+  [key: string]: {
+    [key: number]: string;
+  };
+}
+
+// Traductions
+const translations: Translations = {
+  fr: {
+    skills: 'Compétences & Expertise',
+    loading: 'Chargement des compétences...',
+    error: 'Une erreur est survenue',
+    beginner: 'Débutant',
+    intermediate: 'Intermédiaire',
+    advanced: 'Avancé',
+  },
+  en: {
+    skills: 'Skills & Expertise',
+    loading: 'Loading skills...',
+    error: 'An error occurred',
+    beginner: 'Beginner',
+    intermediate: 'Intermediate',
+    advanced: 'Advanced',
+  },
+  ar: {
+    skills: 'المهارات والخبرات',
+    loading: 'جاري تحميل المهارات...',
+    error: 'حدث خطأ',
+    beginner: 'مبتدئ',
+    intermediate: 'متوسط',
+    advanced: 'متقدم',
+  }
+};
 
 const sections = [
   { id: 'home', name: 'Home' },
@@ -40,25 +114,6 @@ const mockExperiences = [
     icon: AcademicCapIcon,
   },
 ];
-
-interface Experience {
-  id: number;
-  title: string;
-  company: string;
-  location: string;
-  startDate: string;
-  endDate?: string;
-  description: string;
-  technologies: string[];
-}
-
-interface Skill {
-  id: number;
-  name: string;
-  level: number;
-  category: string;
-  description: string;
-}
 
 const projects = [
   {
@@ -143,30 +198,61 @@ const skillThemes = [
   },
 ];
 
+const formatMonth = (date: Date) => {
+  const month = date.toLocaleDateString('fr-FR', { month: 'long' });
+  if (month === 'juin') return 'Juin';
+  if (month === 'juillet') return 'Juil';
+  return month.charAt(0).toUpperCase() + month.slice(1, 3);
+};
+
+const formatDate = (date: Date) => {
+  return `${formatMonth(date)} ${date.getFullYear()}`;
+};
+
 export default function Home() {
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [dynamicDegrees, setDynamicDegrees] = useState<Degree[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [language, setLanguage] = useState<Language>('fr');
+  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
+  const languageMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [experiencesData, skillsData] = await Promise.all([
+        const [experiencesData, skillsData, degreesData] = await Promise.all([
           api.getExperiences(),
-          api.getSkills()
+          api.getSkills(),
+          api.getDegrees()
         ]);
         setExperiences(experiencesData);
         setSkills(skillsData);
-        setLoading(false);
-      } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
-        setError('Impossible de charger les données');
+        setDynamicDegrees(degreesData);
+        setError(null);
+      } catch (err) {
+        setError('Erreur lors du chargement des données');
+        console.error('Erreur:', err);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target as Node)) {
+        setIsLanguageMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   // Fonction pour obtenir l'icône correspondante à la catégorie
@@ -218,20 +304,98 @@ export default function Home() {
 
   // Fonction pour obtenir le label du niveau
   const getSkillLevelLabel = (level: number): string => {
-    switch (level) {
-      case 1:
-        return 'Débutant';
-      case 2:
-        return 'Intermédiaire';
-      case 3:
-        return 'Avancé';
-      default:
-        return 'Débutant';
-    }
+    const labels: SkillLevels = {
+      fr: {
+        1: 'Débutant',
+        2: 'Intermédiaire',
+        3: 'Avancé'
+      },
+      en: {
+        1: 'Beginner',
+        2: 'Intermediate',
+        3: 'Advanced'
+      },
+      ar: {
+        1: 'مبتدئ',
+        2: 'متوسط',
+        3: 'متقدم'
+      }
+    };
+    return labels[language][level] || labels[language][1];
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-br from-[#f0f4ff] via-[#f8fafc] to-[#fdf6fa]">
+      {/* Language Selector */}
+      <div className="fixed top-4 right-4 z-50">
+        <div className="relative" ref={languageMenuRef}>
+          <button
+            onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/50 hover:bg-white/80 transition-all duration-200 border border-gray-200/50"
+          >
+            <Globe className="h-4 w-4 text-indigo-500" />
+            <span className="text-sm font-medium text-gray-700">
+              {language === 'fr' ? 'FR' : language === 'en' ? 'EN' : 'AR'}
+            </span>
+            <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isLanguageMenuOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {isLanguageMenuOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-gray-200/50">
+              <div className="py-1">
+                <button
+                  onClick={() => {
+                    setLanguage('fr');
+                    setIsLanguageMenuOpen(false);
+                  }}
+                  className={`w-full px-4 py-2 text-left text-sm transition-colors duration-200 flex items-center gap-2 ${
+                    language === 'fr' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">FR</span>
+                  Français
+                </button>
+                <button
+                  onClick={() => {
+                    setLanguage('en');
+                    setIsLanguageMenuOpen(false);
+                  }}
+                  className={`w-full px-4 py-2 text-left text-sm transition-colors duration-200 flex items-center gap-2 ${
+                    language === 'en' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="w-6 h-6 flex items-center justify-center rounded-full bg-red-100 text-red-600">EN</span>
+                  English
+                </button>
+                <button
+                  onClick={() => {
+                    setLanguage('ar');
+                    setIsLanguageMenuOpen(false);
+                  }}
+                  className={`w-full px-4 py-2 text-left text-sm transition-colors duration-200 flex items-center gap-2 ${
+                    language === 'ar' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="w-6 h-6 flex items-center justify-center rounded-full bg-green-100 text-green-600">AR</span>
+                  Arabic
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <span className="text-xl font-bold text-gray-900">MJ</span>
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* About Me Section (Hero) */}
       <section id="home" className="relative min-h-[80vh] flex flex-col justify-center overflow-hidden">
         {/* Softer, elegant gradient background */}
@@ -389,8 +553,10 @@ export default function Home() {
                 </span>
                 <div className="bg-white rounded-xl shadow p-6 border border-indigo-50 w-full">
                   <h3 className="text-xl font-semibold text-gray-900 mb-1">{exp.title}</h3>
-                  <div className="text-indigo-500 font-medium">{exp.company}</div>
-                  <div className="text-gray-400 text-sm mb-2">{exp.period}</div>
+                  <div className="text-indigo-500 font-medium capitalize">{exp.company}</div>
+                  <div className="text-gray-400 text-sm mb-2">
+                    {new Date(exp.period).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase())}
+                  </div>
                   <div className="text-gray-600">{exp.description}</div>
                 </div>
               </motion.div>
@@ -411,22 +577,41 @@ export default function Home() {
                 </span>
                 <div className="bg-white rounded-xl shadow p-6 border border-indigo-50 w-full">
                   <h3 className="text-xl font-semibold text-gray-900 mb-1">{exp.title}</h3>
-                  <div className="text-indigo-500 font-medium">{exp.company}</div>
+                  <div className="text-indigo-500 font-medium capitalize">{exp.company}</div>
                   <div className="text-gray-400 text-sm mb-2">
-                    {new Date(exp.startDate).toLocaleDateString()} -{' '}
-                    {exp.endDate ? new Date(exp.endDate).toLocaleDateString() : 'Présent'}
+                    {formatDate(new Date(exp.startDate))} -{' '}
+                    {exp.endDate
+                      ? formatDate(new Date(exp.endDate))
+                      : 'Présent'}
                   </div>
-                  <div className="text-gray-600 mb-4">{exp.description}</div>
-                  {exp.technologies && exp.technologies.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {exp.technologies.map((tech) => (
-                        <span
-                          key={tech}
-                          className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm"
-                        >
-                          {tech}
+                  <div className="text-gray-600 mb-4 font-mono">
+                    {exp.description.split('\n').filter(line => line.trim() !== '').map((line, index) => (
+                      <div key={index} className="flex items-start gap-3 mb-2.5">
+                        <span className="text-indigo-500 mt-1">
+                          <ArrowRightCircle className="w-4 h-4" />
                         </span>
-                      ))}
+                        <span className="text-[14px] font-normal tracking-wide text-gray-700 leading-relaxed">{line}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {exp.technologies && exp.technologies.length > 0 && (
+                    <div className="mt-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-amber-500">
+                          <Terminal className="w-5 h-5" />
+                        </span>
+                        <span className="font-semibold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">Stack Technique</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {exp.technologies.map((tech) => (
+                          <span
+                            key={tech}
+                            className="inline-flex items-center bg-gradient-to-r from-indigo-500/10 to-purple-500/10 text-indigo-600 px-3 py-1.5 rounded-lg text-sm font-medium border border-indigo-100 hover:border-indigo-200 transition-all duration-200 shadow-sm hover:shadow-md"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -460,8 +645,16 @@ export default function Home() {
           </motion.div>
           {/* Timeline */}
           <div className="relative border-l-2 border-pink-200 ml-6">
+            {/* Static Degrees */}
             {degrees.map((deg, idx) => (
-              <div key={deg.title + idx} className="mb-12 ml-8 flex items-start relative">
+              <motion.div
+                key={deg.title + idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                viewport={{ once: true }}
+                className="mb-12 ml-8 flex items-start relative"
+              >
                 <span className="absolute -left-7 top-0 flex items-center justify-center w-10 h-10 rounded-full border-2 border-pink-400 bg-white text-pink-500 shadow-lg ml-[-3%]">
                   <GraduationCap className="h-6 w-6" />
                 </span>
@@ -471,9 +664,40 @@ export default function Home() {
                   <div className="text-gray-400 text-sm mb-2">{deg.period}</div>
                   <div className="text-gray-600">{deg.description}</div>
                 </div>
-              </div>
+              </motion.div>
+            ))}
+
+            {/* Dynamic Degrees */}
+            {!loading && !error && dynamicDegrees.map((deg) => (
+              <motion.div
+                key={deg.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                viewport={{ once: true }}
+                className="mb-12 ml-8 flex items-start relative"
+              >
+                <span className="absolute -left-7 top-0 flex items-center justify-center w-10 h-10 rounded-full border-2 border-pink-400 bg-white text-pink-500 shadow-lg ml-[-3%]">
+                  <GraduationCap className="h-6 w-6" />
+                </span>
+                <div className="bg-white rounded-xl shadow p-6 border border-pink-50 w-full">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-1">{deg.degree}</h3>
+                  <div className="text-pink-500 font-medium">{deg.school}</div>
+                  <div className="text-gray-400 text-sm mb-2">
+                    {new Date(deg.startDate).getFullYear()} -{' '}
+                    {deg.endDate ? new Date(deg.endDate).getFullYear() : 'Présent'}
+                  </div>
+                  <div className="text-gray-600">{deg.description}</div>
+                </div>
+              </motion.div>
             ))}
           </div>
+          {loading && (
+            <div className="text-center text-gray-600 mt-8">Chargement des diplômes...</div>
+          )}
+          {error && (
+            <div className="text-center text-red-600 mt-8">{error}</div>
+          )}
         </div>
       </section>
 
@@ -509,7 +733,7 @@ export default function Home() {
             className="text-left mb-12"
           >
             <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <Code2 className="h-7 w-7 text-indigo-400" /> Skills & Expertise
+              <Code2 className="h-7 w-7 text-indigo-400" /> {translations[language].skills}
             </h2>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -620,6 +844,12 @@ export default function Home() {
               animation: badge-pop 0.7s cubic-bezier(.68,-0.55,.27,1.55) 1;
             }
           `}</style>
+          {loading && (
+            <div className="text-center text-gray-600 mt-8">{translations[language].loading}</div>
+          )}
+          {error && (
+            <div className="text-center text-red-600 mt-8">{translations[language].error}</div>
+          )}
         </div>
       </section>
 
@@ -723,6 +953,6 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-    </>
+    </div>
   );
 } 
