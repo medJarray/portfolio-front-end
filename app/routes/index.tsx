@@ -7,6 +7,11 @@ import Particles from 'react-tsparticles';
 import * as tsparticlesEngine from '@tsparticles/engine';
 import { LinkedinLogo, WhatsappLogo, EnvelopeSimple } from 'phosphor-react';
 import { api } from '../services/api';
+import { useTranslation } from 'react-i18next';
+import '../i18n';
+import { translateExperience, translateDegree } from '../services/translation';
+import BusinessCard from '../components/BusinessCard';
+import { FaIdCard } from 'react-icons/fa';
 
 type Language = 'fr' | 'en' | 'ar';
 
@@ -39,50 +44,11 @@ interface Skill {
   level: number;
 }
 
-interface Translations {
-  [key: string]: {
-    skills: string;
-    loading: string;
-    error: string;
-    beginner: string;
-    intermediate: string;
-    advanced: string;
-  };
-}
-
 interface SkillLevels {
   [key: string]: {
     [key: number]: string;
   };
 }
-
-// Traductions
-const translations: Translations = {
-  fr: {
-    skills: 'Compétences & Expertise',
-    loading: 'Chargement des compétences...',
-    error: 'Une erreur est survenue',
-    beginner: 'Débutant',
-    intermediate: 'Intermédiaire',
-    advanced: 'Avancé',
-  },
-  en: {
-    skills: 'Skills & Expertise',
-    loading: 'Loading skills...',
-    error: 'An error occurred',
-    beginner: 'Beginner',
-    intermediate: 'Intermediate',
-    advanced: 'Advanced',
-  },
-  ar: {
-    skills: 'المهارات والخبرات',
-    loading: 'جاري تحميل المهارات...',
-    error: 'حدث خطأ',
-    beginner: 'مبتدئ',
-    intermediate: 'متوسط',
-    advanced: 'متقدم',
-  }
-};
 
 const sections = [
   { id: 'home', name: 'Home' },
@@ -210,6 +176,7 @@ const formatDate = (date: Date) => {
 };
 
 export default function Home() {
+  const { t, i18n } = useTranslation();
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [dynamicDegrees, setDynamicDegrees] = useState<Degree[]>([]);
@@ -219,40 +186,62 @@ export default function Home() {
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const languageMenuRef = useRef<HTMLDivElement>(null);
 
+  const changeLanguage = (lang: string) => {
+    i18n.changeLanguage(lang);
+    setIsLanguageMenuOpen(false);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [experiencesData, skillsData, degreesData] = await Promise.all([
-          api.getExperiences(),
-          api.getSkills(),
-          api.getDegrees()
+        const [experiencesRes, skillsRes, degreesRes] = await Promise.all([
+          fetch('http://localhost:3000/api/experiences'),
+          fetch('http://localhost:3000/api/skills'),
+          fetch('http://localhost:3000/api/education')
         ]);
-        setExperiences(experiencesData);
+
+        if (!experiencesRes.ok || !skillsRes.ok || !degreesRes.ok) {
+          throw new Error('Failed to fetch data');
+        }
+
+        const [experiencesData, skillsData, degreesData] = await Promise.all([
+          experiencesRes.json(),
+          skillsRes.json(),
+          degreesRes.json()
+        ]);
+
+        // Translate experiences and degrees based on current language
+        const translatedExperiences = await Promise.all(
+          experiencesData.map((exp: any) => translateExperience(exp, i18n.language))
+        );
+
+        const translatedDegrees = await Promise.all(
+          degreesData.map((deg: any) => translateDegree(deg, i18n.language))
+        );
+
+        setExperiences(translatedExperiences);
         setSkills(skillsData);
-        setDynamicDegrees(degreesData);
-        setError(null);
-      } catch (err) {
-        setError('Erreur lors du chargement des données');
-        console.error('Erreur:', err);
+        setDynamicDegrees(translatedDegrees);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to load data. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [i18n.language]); // Re-fetch when language changes
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    const handleClickOutside = (event: MouseEvent) => {
       if (languageMenuRef.current && !languageMenuRef.current.contains(event.target as Node)) {
         setIsLanguageMenuOpen(false);
       }
-    }
+    };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // Fonction pour obtenir l'icône correspondante à la catégorie
@@ -335,7 +324,7 @@ export default function Home() {
           >
             <Globe className="h-4 w-4 text-indigo-500" />
             <span className="text-sm font-medium text-gray-700">
-              {language === 'fr' ? 'FR' : language === 'en' ? 'EN' : 'AR'}
+              {i18n.language === 'fr' ? 'FR' : i18n.language === 'en' ? 'EN' : 'AR'}
             </span>
             <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isLanguageMenuOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -344,36 +333,27 @@ export default function Home() {
             <div className="absolute right-0 mt-2 w-48 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-gray-200/50">
               <div className="py-1">
                 <button
-                  onClick={() => {
-                    setLanguage('fr');
-                    setIsLanguageMenuOpen(false);
-                  }}
+                  onClick={() => changeLanguage('fr')}
                   className={`w-full px-4 py-2 text-left text-sm transition-colors duration-200 flex items-center gap-2 ${
-                    language === 'fr' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'
+                    i18n.language === 'fr' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'
                   }`}
                 >
                   <span className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">FR</span>
                   Français
                 </button>
                 <button
-                  onClick={() => {
-                    setLanguage('en');
-                    setIsLanguageMenuOpen(false);
-                  }}
+                  onClick={() => changeLanguage('en')}
                   className={`w-full px-4 py-2 text-left text-sm transition-colors duration-200 flex items-center gap-2 ${
-                    language === 'en' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'
+                    i18n.language === 'en' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'
                   }`}
                 >
                   <span className="w-6 h-6 flex items-center justify-center rounded-full bg-red-100 text-red-600">EN</span>
                   English
                 </button>
                 <button
-                  onClick={() => {
-                    setLanguage('ar');
-                    setIsLanguageMenuOpen(false);
-                  }}
+                  onClick={() => changeLanguage('ar')}
                   className={`w-full px-4 py-2 text-left text-sm transition-colors duration-200 flex items-center gap-2 ${
-                    language === 'ar' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'
+                    i18n.language === 'ar' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'
                   }`}
                 >
                   <span className="w-6 h-6 flex items-center justify-center rounded-full bg-green-100 text-green-600">AR</span>
@@ -406,33 +386,39 @@ export default function Home() {
         <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center gap-12 px-4 py-24 relative z-20">
           {/* Left: Text & Skills */}
           <div className="flex-1 flex flex-col items-center md:items-start">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 text-center md:text-left tracking-tight text-gray-900 font-sans">
-              Mohamed Jarray
-            </h1>
-            <div className="flex items-center gap-4 mb-4">
-              <h2 className="text-2xl sm:text-3xl font-bold text-indigo-500">Software Developer</h2>
-              <div className="flex gap-3">
-                <a 
-                  href="https://github.com/yourusername" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-indigo-500 transition-colors"
-                >
-                  <Github className="h-6 w-6" />
-                </a>
-                <a 
-                  href="https://linkedin.com/in/yourusername" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-indigo-500 transition-colors"
-                >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="text-center md:text-left"
+            >
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 tracking-tight text-gray-900 font-sans">
+                {t('presentation.title')}
+              </h1>
+              <div className="flex items-center gap-3 mb-4 justify-center">
+                <h2 className="text-2xl sm:text-3xl font-bold text-indigo-500">{t('presentation.subtitle')}</h2>
+                <a href="https://linkedin.com/in/yourprofile" target="_blank" rel="noopener noreferrer">
                   <Linkedin className="h-6 w-6" />
                 </a>
+                <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer">
+                  <Github className="h-6 w-6" />
+                </a>
+                <BusinessCard
+                  name="Mohamed Jarray"
+                  title={t('presentation.subtitle')}
+                  email="your.email@example.com"
+                  phone="+216 XX XXX XXX"
+                  website="https://your-portfolio.com"
+                  photoUrl="/path/to/your/avatar.jpg"
+                  linkedin="https://linkedin.com/in/yourprofile"
+                  github="https://github.com/yourusername"
+                />
               </div>
-            </div>
-            <p className="text-lg md:text-xl mb-8 text-center md:text-left max-w-2xl text-gray-700 font-medium">
-              Passionate software developer with a strong foundation in web development and a knack for creating innovative solutions. Skilled in modern technologies and frameworks, with a focus on delivering high-quality, maintainable code.
-            </p>
+              <p className="text-lg md:text-xl mb-8 max-w-2xl text-gray-700 font-medium">
+                {t('presentation.description')}
+              </p>
+            </motion.div>
             {/* Skills Cards with Lucide icons and glassmorphism */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8 w-full justify-center md:justify-start">
               <div className="backdrop-blur-xl bg-white/60 border border-white/80 rounded-2xl p-5 min-w-[200px] shadow-lg hover:scale-105 hover:border-indigo-400 transition-transform duration-300">
@@ -472,7 +458,7 @@ export default function Home() {
                 href="#connect"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-all duration-300 shadow-lg hover:shadow-xl group relative overflow-hidden"
               >
-                <span>Get In Touch</span>
+                <span>{t('presentation.contact')}</span>
                 <Mail className="h-5 w-5 group-hover:animate-[spin_1s_ease-in-out]" />
               </a>
               <a
@@ -480,7 +466,7 @@ export default function Home() {
                 download
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-indigo-500 rounded-xl hover:bg-indigo-50 transition-all duration-300 shadow-lg hover:shadow-xl border border-indigo-200 group relative overflow-hidden"
               >
-                <span>Download CV</span>
+                <span>{t('presentation.download_cv')}</span>
                 <Download className="h-5 w-5 group-hover:animate-bounce" />
               </a>
             </div>
@@ -520,22 +506,13 @@ export default function Home() {
         </svg>
       </section>
 
-      {/* Experience Section - Timeline */}
-      <section id="experience" className="py-20 bg-gradient-to-br from-[#f0f4ff] via-[#f8fafc] to-[#fdf6fa]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Experience</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              My professional journey and achievements
-            </p>
-          </motion.div>
-
+      {/* Experience Section */}
+      <section id="experience" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">{t('experience.title')}</h2>
+            <p className="text-xl text-gray-600">{t('experience.description')}</p>
+          </div>
           {/* Timeline */}
           <div className="relative border-l-2 border-indigo-200 ml-6">
             {/* Mock Experiences */}
@@ -628,21 +605,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Degrees Section - Timeline */}
-      <section id="degrees" className="py-20 bg-gradient-to-br from-[#f0f4ff] via-[#f8fafc] to-[#fdf6fa]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Degrees</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              My academic background
-            </p>
-          </motion.div>
+      {/* Education Section */}
+      <section id="degrees" className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">{t('education.title')}</h2>
+            <p className="text-xl text-gray-600">{t('education.description')}</p>
+          </div>
           {/* Timeline */}
           <div className="relative border-l-2 border-pink-200 ml-6">
             {/* Static Degrees */}
@@ -725,17 +694,10 @@ export default function Home() {
           />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-            className="text-left mb-12"
-          >
-            <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <Code2 className="h-7 w-7 text-indigo-400" /> {translations[language].skills}
-            </h2>
-          </motion.div>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">{t('skills.title')}</h2>
+            <p className="text-xl text-gray-600">{t('skills.description')}</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {skillThemes.map((theme, idx) => (
               <motion.div
@@ -843,15 +805,15 @@ export default function Home() {
             }
           `}</style>
           {loading && (
-            <div className="text-center text-gray-600 mt-8">{translations[language].loading}</div>
+            <div className="text-center text-gray-600 mt-8">{t('skills.loading')}</div>
           )}
           {error && (
-            <div className="text-center text-red-600 mt-8">{translations[language].error}</div>
+            <div className="text-center text-red-600 mt-8">{t('skills.error')}</div>
           )}
         </div>
       </section>
 
-      {/* Connect Section */}
+      {/* Contact Section */}
       <section id="connect" className="py-20 bg-gradient-to-br from-[#f0f4ff] via-[#f8fafc] to-[#fdf6fa]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -865,90 +827,69 @@ export default function Home() {
               <span className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-gradient-to-br from-indigo-400 via-blue-300 to-pink-300 shadow-md mb-2">
                 <EnvelopeSimple size={32} className="text-indigo-600" />
               </span>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Let's Connect</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('contact.title')}</h2>
               <p className="text-lg text-gray-600 max-w-2xl">
-                I'm always open to new opportunities, collaborations, or just a friendly chat. Feel free to reach out!
+                {t('contact.description')}
               </p>
             </div>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="max-w-2xl mx-auto bg-white/60 backdrop-blur-xl rounded-2xl shadow-xl p-10 flex flex-col gap-6 border border-white/80"
-          >
-            <form className="space-y-6">
-              <div className="relative">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
-                </label>
-                <div className="flex items-center bg-white/80 rounded-lg border border-gray-200 focus-within:border-indigo-400 transition">
-                  <UserCheck className="h-5 w-5 ml-3 text-indigo-400" />
-                  <input
-                    type="text"
-                    id="name"
-                    className="flex-1 bg-transparent border-none focus:ring-0 px-3 py-3 rounded-lg text-gray-900 placeholder-gray-400"
-                    placeholder="Your name"
-                  />
+          <div className="flex justify-center">
+            <div className="bg-gradient-to-r from-indigo-400 via-pink-400 to-blue-400 p-[2px] rounded-2xl w-full max-w-lg mx-auto">
+              <form className="bg-white rounded-2xl shadow-xl p-10 flex flex-col gap-6 border border-white w-full">
+                <div className="relative">
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('contact.form.name')}
+                  </label>
+                  <div className="flex items-center rounded-lg border border-gray-200 focus-within:border-indigo-400 transition bg-transparent">
+                    <UserCheck className="h-5 w-5 ml-3 text-indigo-400" />
+                    <input
+                      type="text"
+                      id="name"
+                      className="flex-1 bg-transparent border-none focus:ring-0 px-3 py-3 rounded-lg text-gray-900 placeholder-gray-400"
+                      placeholder={t('contact.form.name_placeholder')}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="relative">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <div className="flex items-center bg-white/80 rounded-lg border border-gray-200 focus-within:border-indigo-400 transition">
-                  <EnvelopeSimple className="h-5 w-5 ml-3 text-indigo-400" />
-                  <input
-                    type="email"
-                    id="email"
-                    className="flex-1 bg-transparent border-none focus:ring-0 px-3 py-3 rounded-lg text-gray-900 placeholder-gray-400"
-                    placeholder="you@email.com"
-                  />
+                <div className="relative">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('contact.form.email')}
+                  </label>
+                  <div className="flex items-center rounded-lg border border-gray-200 focus-within:border-indigo-400 transition bg-transparent">
+                    <EnvelopeSimple className="h-5 w-5 ml-3 text-indigo-400" />
+                    <input
+                      type="email"
+                      id="email"
+                      className="flex-1 bg-transparent border-none focus:ring-0 px-3 py-3 rounded-lg text-gray-900 placeholder-gray-400"
+                      placeholder={t('contact.form.email_placeholder')}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="relative">
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                  Message
-                </label>
-                <div className="flex items-start bg-white/80 rounded-lg border border-gray-200 focus-within:border-indigo-400 transition">
-                  <MessageCircle className="h-5 w-5 ml-3 mt-3 text-indigo-400" />
-                  <textarea
-                    id="message"
-                    rows={4}
-                    className="flex-1 bg-transparent border-none focus:ring-0 px-3 py-3 rounded-lg text-gray-900 placeholder-gray-400 resize-none"
-                    placeholder="Your message..."
-                  ></textarea>
+                <div className="relative">
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('contact.form.message')}
+                  </label>
+                  <div className="flex items-start rounded-lg border border-gray-200 focus-within:border-indigo-400 transition bg-transparent">
+                    <MessageCircle className="h-5 w-5 ml-3 mt-3 text-indigo-400" />
+                    <textarea
+                      id="message"
+                      rows={4}
+                      className="flex-1 bg-transparent border-none focus:ring-0 px-3 py-3 rounded-lg text-gray-900 placeholder-gray-400 resize-none"
+                      placeholder={t('contact.form.message_placeholder')}
+                    ></textarea>
+                  </div>
                 </div>
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="w-full px-6 py-3 bg-indigo-500 text-white rounded-lg shadow-lg hover:bg-indigo-600 transition font-semibold flex items-center justify-center gap-2"
-              >
-                <Send className="h-5 w-5" /> Send Message
-              </motion.button>
-            </form>
-            {/* Social Icons */}
-            <div className="flex justify-center gap-8 mt-6">
-              <a href="https://wa.me/yourwhatsapp" target="_blank" rel="noopener noreferrer" className="group">
-                <span className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-green-100 hover:bg-green-200 transition shadow-lg">
-                  <WhatsappLogo size={28} className="text-green-500 group-hover:scale-110 transition-transform" />
-                </span>
-              </a>
-              <a href="mailto:youremail@email.com" className="group">
-                <span className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 hover:bg-indigo-200 transition shadow-lg">
-                  <EnvelopeSimple size={28} className="text-indigo-500 group-hover:scale-110 transition-transform" />
-                </span>
-              </a>
-              <a href="https://linkedin.com/in/yourlinkedin" target="_blank" rel="noopener noreferrer" className="group">
-                <span className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 hover:bg-blue-200 transition shadow-lg">
-                  <LinkedinLogo size={28} className="text-blue-500 group-hover:scale-110 transition-transform" />
-                </span>
-              </a>
+                <div>
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="w-full px-6 py-3 bg-indigo-500 text-white rounded-lg shadow-lg hover:bg-indigo-600 transition font-semibold flex items-center justify-center gap-2"
+                  >
+                    <Send className="h-5 w-5" /> {t('contact.form.send')}
+                  </motion.button>
+                </div>
+              </form>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
     </div>
