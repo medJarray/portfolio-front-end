@@ -1,0 +1,51 @@
+{
+  "name": "my-react-router-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@headlessui/react": "^2.2.4",
+    "@heroicons/react": "^2.2.0",
+    "@reduxjs/toolkit": "^2.0.1",
+    "@tanstack/react-query": "^5.17.9",
+    "@tsparticles/engine": "^3.8.1",
+    "axios": "^1.10.0",
+    "framer-motion": "^12.18.0",
+    "html2canvas": "^1.4.1",
+    "i18next": "^25.2.1",
+    "i18next-browser-languagedetector": "^8.2.0",
+    "lucide-react": "^0.515.0",
+    "phosphor-react": "^1.4.1",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-hook-form": "^7.48.2",
+    "react-hot-toast": "^2.4.1",
+    "react-i18next": "^15.5.3",
+    "react-icons": "^5.5.0",
+    "react-parallax-tilt": "^1.7.298",
+    "react-redux": "^9.0.4",
+    "react-router-dom": "^7.6.2",
+    "react-tsparticles": "^2.12.2",
+    "vcard-creator": "^0.7.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.10",
+    "@types/node": "^20",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.5.2",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.5",
+    "tailwindcss": "^4.1.10",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.3",
+    "vite-tsconfig-paths": "^5.1.4"
+  }
+}
