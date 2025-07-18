@@ -1,18 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { api } from '../services/api';
-
-interface Contact {
-  id: number;
-  name: string;
-  email: string;
-  message: string;
-  createdAt: string;
-}
+import type { Contact, CreateContact } from '~/types';
 
 export function AdminContacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [selectedContact, setSelectedContact] = useState<CreateContact & { id: string } | null>(null);
 
   useEffect(() => {
     fetchContacts();
@@ -27,8 +20,8 @@ export function AdminContacts() {
     }
   };
 
-  const handleDeleteContact = async (id: number) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
+  const handleDeleteContact = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this contact?')) {
       try {
         await api.deleteContact(id);
         setContacts(contacts.filter(contact => contact.id !== id));
@@ -36,7 +29,7 @@ export function AdminContacts() {
           setSelectedContact(null);
         }
       } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
+        console.error('Error deleting contact:', error);
       }
     }
   };
@@ -85,7 +78,7 @@ export function AdminContacts() {
                       </span>
                     </div>
                     <p className="mt-2 text-sm text-gray-600 line-clamp-2">
-                      {contact.message}
+                      message content
                     </p>
                   </motion.div>
                 ))}
@@ -103,21 +96,10 @@ export function AdminContacts() {
                     </h2>
                     <p className="text-sm text-gray-500">{selectedContact.email}</p>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-500">
-                      {formatDate(selectedContact.createdAt)}
-                    </span>
-                    <button
-                      onClick={() => handleDeleteContact(selectedContact.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Supprimer
-                    </button>
-                  </div>
                 </div>
                 <div className="prose max-w-none">
                   <p className="text-gray-700 whitespace-pre-wrap">
-                    {selectedContact.message}
+                    message content
                   </p>
                 </div>
               </div>

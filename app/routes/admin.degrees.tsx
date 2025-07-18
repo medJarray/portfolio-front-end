@@ -1,21 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { api } from '../services/api';
-
-interface Degree {
-  id: number;
-  degree: string;
-  school: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-}
+import { api, type UpdateDegree } from '../services/api';
+import type { CreateDegree, Degree } from '~/types';
 
 export function AdminDegrees() {
   const [degrees, setDegrees] = useState<Degree[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentDegree, setCurrentDegree] = useState<Partial<Degree>>({});
+  const [currentDegree, setCurrentDegree] = useState<Partial<CreateDegree & { id: string }>>({});
 
   useEffect(() => {
     fetchDegrees();
@@ -40,13 +31,13 @@ export function AdminDegrees() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteDegree = async (id: number) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce diplôme ?')) {
+  const handleDeleteDegree = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this degree?')) {
       try {
         await api.deleteDegree(id);
         setDegrees(degrees.filter(deg => deg.id !== id));
       } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
+        console.error('Error deleting degree:', error);
       }
     }
   };
@@ -54,15 +45,17 @@ export function AdminDegrees() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (currentDegree.id) {
-        await api.updateDegree(currentDegree.id, currentDegree);
+      const { id, ...updateData } = currentDegree;
+      if (id) {
+        await api.updateDegree(id, updateData as UpdateDegree);
       } else {
-        await api.createDegree(currentDegree);
+        const { id, ...createData } = currentDegree;
+        await api.createDegree(createData as CreateDegree);
       }
       setIsModalOpen(false);
       fetchDegrees();
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+      console.error('Error saving degree:', error);
     }
   };
 
@@ -116,7 +109,7 @@ export function AdminDegrees() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{degree.school}</div>
+                    <div className="text-sm text-gray-900">{degree.institution}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{degree.location}</div>
@@ -124,7 +117,7 @@ export function AdminDegrees() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
                       {new Date(degree.startDate).toLocaleDateString()} -{' '}
-                      {new Date(degree.endDate).toLocaleDateString()}
+                      {degree.endDate ? new Date(degree.endDate).toLocaleDateString() : 'Present'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -149,133 +142,142 @@ export function AdminDegrees() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full">
-            <h2 className="text-2xl font-bold mb-4">
-              {currentDegree.id ? 'Modifier' : 'Ajouter'} un diplôme
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-blue-200/70 via-indigo-100/80 to-white/90 backdrop-blur-2xl">
+          <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }} transition={{ duration: 0.28 }}
+            className="bg-white/80 rounded-3xl shadow-2xl p-12 max-w-2xl w-full border border-blue-200 relative animate-fadeIn backdrop-blur-xl ring-1 ring-blue-100/40">
+            {/* Barre de progression animée en haut */}
+            <div className="absolute left-0 top-0 w-full h-1 overflow-hidden rounded-t-3xl">
+              <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 0.7, ease: 'easeInOut' }}
+                className="h-full bg-gradient-to-r from-blue-500 via-indigo-400 to-pink-400 animate-pulse" />
+            </div>
+            <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-blue-600 transition-colors text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-200 rounded-full w-11 h-11 flex items-center justify-center shadow-md bg-white/70 backdrop-blur">
+              <span className="sr-only">Fermer</span>
+              <svg xmlns='http://www.w3.org/2000/svg' className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h2 className="mb-12 text-center flex items-center justify-center gap-4 select-none">
+              <span className="inline-flex items-center justify-center rounded-full bg-gradient-to-tr from-pink-400 via-blue-400 to-indigo-500 shadow-lg p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-white drop-shadow" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="7" width="18" height="13" rx="3" fill="#6366f1" />
+                  <path d="M7 7V5a5 5 0 0110 0v2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="12" cy="14" r="3" stroke="white" strokeWidth="2" />
+                </svg>
+              </span>
+              <span className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-500 to-pink-500 bg-clip-text text-transparent tracking-tight drop-shadow-lg font-display animate-gradient-x">
+                {currentDegree.id ? 'Modifier' : 'Ajouter'} un diplôme
+              </span>
             </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Diplôme
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  value={currentDegree.degree || ''}
-                  onChange={(e) =>
-                    setCurrentDegree({
-                      ...currentDegree,
-                      degree: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  École
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  value={currentDegree.school || ''}
-                  onChange={(e) =>
-                    setCurrentDegree({
-                      ...currentDegree,
-                      school: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Localisation
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  value={currentDegree.location || ''}
-                  onChange={(e) =>
-                    setCurrentDegree({
-                      ...currentDegree,
-                      location: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Date de début
-                  </label>
+            <form onSubmit={handleSubmit} className="space-y-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="relative group">
                   <input
-                    type="date"
+                    type="text"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    value={currentDegree.startDate || ''}
-                    onChange={(e) =>
-                      setCurrentDegree({
-                        ...currentDegree,
-                        startDate: e.target.value,
-                      })
-                    }
+                    id="degree"
+                    className="peer h-12 w-full border-b-2 border-gray-300 text-gray-900 placeholder-transparent focus:outline-none focus:border-blue-600 bg-white/60 transition-all text-base pr-10 rounded-xl shadow-inner group-hover:border-blue-400 group-hover:shadow-lg"
+                    placeholder="Diplôme"
+                    value={currentDegree.degree || ''}
+                    onChange={(e) => setCurrentDegree({ ...currentDegree, degree: e.target.value })}
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Date de fin
+                  <label htmlFor="degree" className="absolute left-2 -top-3 text-gray-600 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-focus:-top-3 peer-focus:text-blue-600 peer-focus:text-sm bg-white/80 px-1 rounded flex items-center gap-1">
+                    <svg className="w-4 h-4 text-blue-400 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 17l-4-4h8l-4 4z" /></svg>
+                    Diplôme
                   </label>
+                </div>
+                <div className="relative group">
                   <input
-                    type="date"
+                    type="text"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    value={currentDegree.endDate || ''}
-                    onChange={(e) =>
-                      setCurrentDegree({
-                        ...currentDegree,
-                        endDate: e.target.value,
-                      })
-                    }
+                    id="institution"
+                    className="peer h-12 w-full border-b-2 border-gray-300 text-gray-900 placeholder-transparent focus:outline-none focus:border-indigo-600 bg-white/60 transition-all text-base pr-10 rounded-xl shadow-inner group-hover:border-indigo-400 group-hover:shadow-lg"
+                    placeholder="École"
+                    value={currentDegree.institution || ''}
+                    onChange={(e) => setCurrentDegree({ ...currentDegree, institution: e.target.value })}
                   />
+                  <label htmlFor="institution" className="absolute left-2 -top-3 text-gray-600 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-focus:-top-3 peer-focus:text-indigo-600 peer-focus:text-sm bg-white/80 px-1 rounded flex items-center gap-1">
+                    <svg className="w-4 h-4 text-indigo-400 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 8h8M8 12h8M8 16h4" /></svg>
+                    École
+                  </label>
+                </div>
+                <div className="relative group md:col-span-2">
+                  <input
+                    type="text"
+                    required
+                    id="location"
+                    className="peer h-12 w-full border-b-2 border-gray-300 text-gray-900 placeholder-transparent focus:outline-none focus:border-purple-600 bg-white/60 transition-all text-base pr-10 rounded-xl shadow-inner group-hover:border-purple-400 group-hover:shadow-lg"
+                    placeholder="Localisation"
+                    value={currentDegree.location || ''}
+                    onChange={(e) => setCurrentDegree({ ...currentDegree, location: e.target.value })}
+                  />
+                  <label htmlFor="location" className="absolute left-2 -top-3 text-gray-600 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-focus:-top-3 peer-focus:text-purple-600 peer-focus:text-sm bg-white/80 px-1 rounded flex items-center gap-1">
+                    <svg className="w-4 h-4 text-purple-400 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.02 0l-1.41-1.41M6.34 6.34L4.93 4.93" /></svg>
+                    Localisation
+                  </label>
+                </div>
+                <div className="flex gap-4 md:col-span-2">
+                  <div className="relative w-1/2 group">
+                    <input
+                      type="date"
+                      required
+                      id="startDate"
+                      className="peer h-12 w-full border-b-2 border-blue-200 text-gray-900 placeholder-transparent focus:outline-none focus:border-blue-600 bg-white/60 transition-all text-base rounded-xl shadow-inner group-hover:border-blue-400 group-hover:shadow-lg pl-4 pr-10"
+                      placeholder="Début"
+                      value={currentDegree.startDate || ''}
+                      onChange={(e) => setCurrentDegree({ ...currentDegree, startDate: e.target.value })}
+                    />
+                    <label htmlFor="startDate" className="absolute left-2 -top-4 text-gray-600 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-focus:-top-4 peer-focus:text-blue-600 peer-focus:text-sm bg-white/80 px-1 rounded flex items-center gap-1">
+                      <svg className="w-4 h-4 text-blue-400 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      Début
+                    </label>
+                  </div>
+                  <div className="relative w-1/2 group">
+                    <input
+                      type="date"
+                      required
+                      id="endDate"
+                      className="peer h-12 w-full border-b-2 border-indigo-200 text-gray-900 placeholder-transparent focus:outline-none focus:border-indigo-600 bg-white/60 transition-all text-base rounded-xl shadow-inner group-hover:border-indigo-400 group-hover:shadow-lg pl-4 pr-10"
+                      placeholder="Fin"
+                      value={currentDegree.endDate || ''}
+                      onChange={(e) => setCurrentDegree({ ...currentDegree, endDate: e.target.value })}
+                    />
+                    <label htmlFor="endDate" className="absolute left-2 -top-4 text-gray-600 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-focus:-top-4 peer-focus:text-indigo-600 peer-focus:text-sm bg-white/80 px-1 rounded flex items-center gap-1">
+                      <svg className="w-4 h-4 text-indigo-400 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      Fin
+                    </label>
+                  </div>
+                </div>
+                <div className="relative md:col-span-2 group">
+                  <textarea
+                    required
+                    id="description"
+                    rows={4}
+                    className="peer w-full border-b-2 border-gray-300 text-gray-900 placeholder-transparent focus:outline-none focus:border-blue-600 bg-white/60 transition-all resize-none text-base pr-10 rounded-xl shadow-inner group-hover:border-indigo-400 group-hover:shadow-lg"
+                    placeholder="Description"
+                    value={currentDegree.description || ''}
+                    onChange={(e) => setCurrentDegree({ ...currentDegree, description: e.target.value })}
+                  />
+                  <label htmlFor="description" className="absolute left-2 -top-3 text-gray-600 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-focus:-top-3 peer-focus:text-blue-600 peer-focus:text-sm bg-white/80 px-1 rounded flex items-center gap-1">
+                    <svg className="w-4 h-4 text-indigo-400 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 8h8M8 12h8M8 16h4" /></svg>
+                    Description
+                  </label>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Description
-                </label>
-                <textarea
-                  required
-                  rows={4}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  value={currentDegree.description || ''}
-                  onChange={(e) =>
-                    setCurrentDegree({
-                      ...currentDegree,
-                      description: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="flex justify-end space-x-4 mt-6">
+              <div className="flex justify-end space-x-6 mt-12">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
+                  className="px-8 py-3 rounded-xl border border-gray-300 bg-white/80 text-gray-700 hover:bg-gray-100 transition-colors shadow-md font-semibold text-lg backdrop-blur"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all text-lg backdrop-blur"
                 >
                   {currentDegree.id ? 'Modifier' : 'Ajouter'}
                 </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

@@ -1,155 +1,250 @@
+import type { Address, Contact, Degree, Experience, Skill } from "~/types";
+
 const API_URL = 'http://localhost:3000/api';
 
-interface Experience {
-  id: number;
-  title: string;
-  company: string;
-  location: string;
-  startDate: string;
-  endDate?: string;
-  description: string;
-  technologies: string[];
+type CreateExperience = Omit<Experience, 'id' | 'createdAt' | 'updatedAt'>;
+type UpdateExperience = Partial<CreateExperience>;
+
+type CreateDegree = Omit<Degree, 'id' | 'createdAt' | 'updatedAt'>;
+type UpdateDegree = Partial<CreateDegree>;
+
+type CreateSkill = Omit<Skill, 'id' | 'createdAt' | 'updatedAt'>;
+type UpdateSkill = Partial<CreateSkill>;
+
+type CreateContact = Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>;
+type UpdateContact = Partial<CreateContact>;
+
+// ====== UTILITAIRES ======
+
+class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public response?: any
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
 }
 
-interface Degree {
-  id: number;
-  title: string;
-  school: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  description: string;
+async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new ApiError(
+      errorData.message || `HTTP Error ${response.status}`,
+      response.status,
+      errorData
+    );
+  }
+  return response.json();
 }
 
-interface Skill {
-  id: number;
-  name: string;
-  level: number;
-  category: string;
+async function makeRequest<T>(
+  url: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const defaultOptions: RequestInit = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+    ...options,
+  };
+
+  try {
+    const response = await fetch(`${API_URL}${url}`, defaultOptions);
+    console.log({response});
+    return handleResponse<T>(response);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError('Network error or server unavailable', 0);
+  }
 }
 
-interface Contact {
-  id: number;
-  name: string;
-  email: string;
-  message: string;
-  createdAt: string;
-}
+// ====== API PRINCIPAL ======
 
 export const api = {
-  // Experiences
+  // ================== EXPERIENCES ==================
+  
   getExperiences: async (): Promise<Experience[]> => {
-    const response = await fetch(`${API_URL}/experiences`);
-    if (!response.ok) throw new Error('Failed to fetch experiences');
-    return response.json();
+    return makeRequest<Experience[]>('/experiences');
   },
 
-  createExperience: async (experience: Partial<Experience>): Promise<Experience> => {
-    const response = await fetch(`${API_URL}/experiences`, {
+  getExperience: async (id: string): Promise<Experience> => {
+    return makeRequest<Experience>(`/experiences/${id}`);
+  },
+
+  createExperience: async (experience: CreateExperience): Promise<Experience> => {
+    console.log({ experience });
+    return makeRequest<Experience>('/experiences', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(experience),
     });
-    if (!response.ok) throw new Error('Failed to create experience');
-    return response.json();
   },
 
-  updateExperience: async (id: number, experience: Partial<Experience>): Promise<Experience> => {
-    const response = await fetch(`${API_URL}/experiences/${id}`, {
+  updateExperience: async (id: string, experience: UpdateExperience): Promise<Experience> => {
+    return makeRequest<Experience>(`/experiences/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(experience),
     });
-    if (!response.ok) throw new Error('Failed to update experience');
-    return response.json();
   },
 
-  deleteExperience: async (id: number): Promise<void> => {
-    const response = await fetch(`${API_URL}/experiences/${id}`, {
+  deleteExperience: async (id: string): Promise<void> => {
+    await makeRequest<void>(`/experiences/${id}`, {
       method: 'DELETE',
     });
-    if (!response.ok) throw new Error('Failed to delete experience');
   },
 
-  // Degrees
+  // ================== DEGREES ==================
+
   getDegrees: async (): Promise<Degree[]> => {
-    const response = await fetch(`${API_URL}/education`);
-    if (!response.ok) throw new Error('Failed to fetch degrees');
-    return response.json();
+    return makeRequest<Degree[]>('/degrees');
   },
 
-  createDegree: async (degree: Partial<Degree>): Promise<Degree> => {
-    const response = await fetch(`${API_URL}/education`, {
+  getDegree: async (id: string): Promise<Degree> => {
+    return makeRequest<Degree>(`/degrees/${id}`);
+  },
+
+  createDegree: async (degree: CreateDegree): Promise<Degree> => {
+    return makeRequest<Degree>('/degrees', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(degree),
     });
-    if (!response.ok) throw new Error('Failed to create degree');
-    return response.json();
   },
 
-  updateDegree: async (id: number, degree: Partial<Degree>): Promise<Degree> => {
-    const response = await fetch(`${API_URL}/education/${id}`, {
+  updateDegree: async (id: string, degree: UpdateDegree): Promise<Degree> => {
+    return makeRequest<Degree>(`/degrees/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(degree),
     });
-    if (!response.ok) throw new Error('Failed to update degree');
-    return response.json();
   },
 
-  deleteDegree: async (id: number): Promise<void> => {
-    const response = await fetch(`${API_URL}/education/${id}`, {
+  deleteDegree: async (id: string): Promise<void> => {
+    await makeRequest<void>(`/degrees/${id}`, {
       method: 'DELETE',
     });
-    if (!response.ok) throw new Error('Failed to delete degree');
   },
 
-  // Skills
+  // ================== SKILLS ==================
+
   getSkills: async (): Promise<Skill[]> => {
-    const response = await fetch(`${API_URL}/skills`);
-    if (!response.ok) throw new Error('Failed to fetch skills');
-    return response.json();
+    return makeRequest<Skill[]>('/skills');
   },
 
-  createSkill: async (skill: Partial<Skill>): Promise<Skill> => {
-    const response = await fetch(`${API_URL}/skills`, {
+  getSkill: async (id: string): Promise<Skill> => {
+    return makeRequest<Skill>(`/skills/${id}`);
+  },
+
+  getSkillsByCategory: async (category: string): Promise<Skill[]> => {
+    return makeRequest<Skill[]>(`/skills?category=${encodeURIComponent(category)}`);
+  },
+
+  createSkill: async (skill: CreateSkill): Promise<Skill> => {
+    console.log('Creating skill:', skill);
+    return makeRequest<Skill>('/skills', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(skill),
     });
-    if (!response.ok) throw new Error('Failed to create skill');
-    return response.json();
   },
 
-  updateSkill: async (id: number, skill: Partial<Skill>): Promise<Skill> => {
-    const response = await fetch(`${API_URL}/skills/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+  updateSkill: async (id: string, skill: UpdateSkill): Promise<Skill> => {
+    console.log('Updating skill:', { id, skill });
+    return makeRequest<Skill>(`/skills/${id}`, {
+      method: 'PATCH', // ✅ PATCH pour correspondre au backend
       body: JSON.stringify(skill),
     });
-    if (!response.ok) throw new Error('Failed to update skill');
-    return response.json();
   },
 
-  deleteSkill: async (id: number): Promise<void> => {
-    const response = await fetch(`${API_URL}/skills/${id}`, {
+  deleteSkill: async (id: string): Promise<void> => {
+    await makeRequest<void>(`/skills/${id}`, {
       method: 'DELETE',
     });
-    if (!response.ok) throw new Error('Failed to delete skill');
   },
 
-  // Contact Messages
+  // ================== CONTACTS ==================
+
   getContacts: async (): Promise<Contact[]> => {
-    const response = await fetch(`${API_URL}/contacts`);
-    if (!response.ok) throw new Error('Failed to fetch contacts');
-    return response.json();
+    return makeRequest<Contact[]>('/contact'); // ✅ /contact selon votre controller
   },
 
-  deleteContact: async (id: number): Promise<void> => {
-    const response = await fetch(`${API_URL}/contacts/${id}`, {
+  getContact: async (id: string): Promise<Contact> => {
+    return makeRequest<Contact>(`/contact/${id}`);
+  },
+
+  createContact: async (contact: CreateContact): Promise<Contact> => {
+    return makeRequest<Contact>('/contact', {
+      method: 'POST',
+      body: JSON.stringify(contact),
+    });
+  },
+
+  updateContact: async (id: string, contact: UpdateContact): Promise<Contact> => {
+    return makeRequest<Contact>(`/contact/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(contact),
+    });
+  },
+
+  deleteContact: async (id: string): Promise<void> => {
+    await makeRequest<void>(`/contact/${id}`, {
       method: 'DELETE',
     });
-    if (!response.ok) throw new Error('Failed to delete contact');
   },
-}; 
+};
+
+// ====== EXPORTS INDIVIDUELS (optionnel) ======
+
+export const experienceApi = {
+  getAll: api.getExperiences,
+  getById: api.getExperience,
+  create: api.createExperience,
+  update: api.updateExperience,
+  delete: api.deleteExperience,
+};
+
+export const degreeApi = {
+  getAll: api.getDegrees,
+  getById: api.getDegree,
+  create: api.createDegree,
+  update: api.updateDegree,
+  delete: api.deleteDegree,
+};
+
+export const skillApi = {
+  getAll: api.getSkills,
+  getById: api.getSkill,
+  getByCategory: api.getSkillsByCategory,
+  create: api.createSkill,
+  update: api.updateSkill,
+  delete: api.deleteSkill,
+};
+
+export const contactApi = {
+  getAll: api.getContacts,
+  getById: api.getContact,
+  create: api.createContact,
+  update: api.updateContact,
+  delete: api.deleteContact,
+};
+
+// ====== EXPORTS DES TYPES ======
+
+export type {
+  Experience,
+  Degree,
+  Skill,
+  Contact,
+  Address,
+  CreateExperience,
+  UpdateExperience,
+  CreateDegree,
+  UpdateDegree,
+  CreateSkill,
+  UpdateSkill,
+  CreateContact,
+  UpdateContact,
+};
+
+export { ApiError };

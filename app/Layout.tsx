@@ -9,6 +9,9 @@ import { LinkedinLogo, WhatsappLogo, EnvelopeSimple } from 'phosphor-react';
 import { Brain } from 'lucide-react';
 import { Outlet, useLocation } from 'react-router-dom';
 
+// Retrieve the admin IP from environment variables
+const MY_ADMIN_IP = import.meta.env.VITE_ADMIN_IP;
+
 const sections = [
   { id: 'home', name: 'Home' },
   { id: 'experience', name: 'Experience' },
@@ -84,72 +87,20 @@ const projects = [
   },
 ];
 
-const degrees = [
-  {
-    title: 'Master of Science in Computer Science',
-    school: 'University of Technology',
-    period: '2020 - 2022',
-    description: 'Specialized in Artificial Intelligence and Cloud Computing.'
-  },
-  {
-    title: 'Bachelor of Software Engineering',
-    school: 'Engineering School',
-    period: '2016 - 2020',
-    description: 'Major in Web Technologies and Distributed Systems.'
-  }
-];
-
-const skillThemes = [
-  {
-    title: 'Frontend Development',
-    icon: <Code2 className="h-6 w-6 text-indigo-400" />,
-    skills: [
-      { name: 'React', icon: <Link2 className="h-4 w-4 text-sky-400" />, desc: 'Component architecture, hooks, state management' },
-      { name: 'Angular', icon: <Link2 className="h-4 w-4 text-rose-400" />, desc: 'Component architecture, modules, Reactive programing' },
-      { name: 'TypeScript', icon: <Link2 className="h-4 w-4 text-blue-400" />, desc: 'Type safety, interfaces, generics' },
-      { name: 'Tailwind CSS', icon: <Link2 className="h-4 w-4 text-cyan-400" />, desc: 'Responsive design, custom themes' },
-      { name: 'HTML/CSS', icon: <Link2 className="h-4 w-4 text-orange-400" />, desc: 'Semantic markup, animations, Grid/Flexbox' },
-    ]
-  },
-  {
-    title: 'Backend Development',
-    icon: <Database className="h-6 w-6 text-blue-500" />,
-    skills: [
-      { name: 'Node.js', icon: <Link2 className="h-4 w-4 text-green-500" />, desc: 'REST APIs, middleware, authentication' },
-      { name: 'NestJS', icon: <Link2 className="h-4 w-4 text-rose-500" />, desc: 'Microservices, Cronjobs, GraphQL API, REST API' },
-      { name: 'Spring boot', icon: <Link2 className="h-4 w-4 text-emerald-400" />, desc: 'Microservices, Spring batch, REST API' },
-      { name: 'PostgreSQL', icon: <Link2 className="h-4 w-4 text-blue-400" />, desc: 'SQL, indexing' },
-      { name: 'MongoDB', icon: <Link2 className="h-4 w-4 text-green-400" />, desc: 'Schema design, aggregation, indexing' },
-      { name: 'API Design', icon: <Link2 className="h-4 w-4 text-rose-400" />, desc: 'RESTful principles, documentation' },
-    ]
-  },
-  {
-    title: 'Tools & DevOps',
-    icon: <Wrench className="h-6 w-6 text-indigo-500" />,
-    skills: [
-      { name: 'Git', icon: <GitBranch className="h-4 w-4 text-rose-400" />, desc: 'Version control, branching strategies' },
-      { name: 'Docker', icon: <Dock className="h-4 w-4 text-sky-400" />, desc: 'Containerization, multi-stage builds' },
-      { name: 'K8S', icon: <Cloud className="h-4 w-4 text-blue-400" />, desc: 'Deployments, Services, Pods, ConfigMaps, Secrets' },
-      { name: 'AWS', icon: <Cloud className="h-4 w-4 text-orange-400" />, desc: 'EC2, S3, Lambda, CloudFront' },
-      { name: 'CI/CD', icon: <Link2 className="h-4 w-4 text-green-400" />, desc: 'Automated testing, deployment' },
-    ]
-  },
-  {
-    title: 'Soft Skills',
-    icon: <Brain className="h-6 w-6 text-indigo-400" />,
-    skills: [
-      { name: 'Problem Solving', icon: <Lightbulb className="h-4 w-4 text-violet-400" />, desc: 'Analytical thinking, debugging' },
-      { name: 'Team Collaboration', icon: <UserCheck className="h-4 w-4 text-pink-400" />, desc: 'Code reviews, mentoring' },
-      { name: 'Communication', icon: <MessageCircle className="h-4 w-4 text-blue-400" />, desc: 'Technical documentation, client interaction' },
-      { name: 'Project Management', icon: <ListChecks className="h-4 w-4 text-orange-400" />, desc: 'Agile methodologies, estimation' },
-    ]
-  },
-];
-
 export function Layout() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
+  const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    fetch('https://api.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => {
+        if (data.ip === MY_ADMIN_IP) setIsAdmin(true);
+      })
+      .catch(() => setIsAdmin(false));
+  }, []);
 
   // Si nous sommes sur une route admin, on laisse le AdminLayout gérer l'affichage
   if (location.pathname.startsWith('/admin')) {
@@ -169,7 +120,6 @@ export function Layout() {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
       let newActiveSection = activeSection;
-      
       sections.forEach(section => {
         const element = document.getElementById(section.id);
         if (element) {
@@ -179,12 +129,10 @@ export function Layout() {
           }
         }
       });
-
       if (newActiveSection !== activeSection) {
         setActiveSection(newActiveSection);
       }
     };
-
     let scrollTimeout: number;
     const throttledScroll = () => {
       if (scrollTimeout) {
@@ -192,7 +140,6 @@ export function Layout() {
       }
       scrollTimeout = window.requestAnimationFrame(handleScroll);
     };
-
     window.addEventListener('scroll', throttledScroll);
     return () => {
       window.removeEventListener('scroll', throttledScroll);
@@ -247,15 +194,17 @@ export function Layout() {
                   )}
                 </motion.button>
               ))}
-              <motion.a
-                href="/admin"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, delay: sections.length * 0.05 }}
-                className="relative px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200"
-              >
-                Admin
-              </motion.a>
+              {isAdmin && (
+                <motion.a
+                  href="/admin"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3, delay: sections.length * 0.05 }}
+                  className="relative px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                >
+                  Admin
+                </motion.a>
+              )}
             </nav>
 
             {/* Mobile Navigation Button */}
@@ -297,12 +246,14 @@ export function Layout() {
                     {section.name}
                   </button>
                 ))}
-                <a
-                  href="/admin"
-                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-blue-600"
-                >
-                  Admin
-                </a>
+                {isAdmin && (
+                  <a
+                    href="/admin"
+                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-blue-600"
+                  >
+                    Admin
+                  </a>
+                )}
               </div>
             </motion.div>
           )}
@@ -318,4 +269,5 @@ export function Layout() {
       </footer>
     </div>
   );
-} 
+}
+// ...fin du composant Layout (déjà présent plus haut)...

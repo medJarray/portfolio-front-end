@@ -1,21 +1,20 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FaEnvelope, 
-  FaPhone, 
-  FaGlobe, 
-  FaLinkedin, 
-  FaGithub, 
-  FaIdCard, 
-  FaDownload, 
-  FaShare,
-  FaTimes,
-  FaStar,
-  FaRegIdCard
-} from 'react-icons/fa';
-import { HiOutlineSparkles, HiOutlineLightningBolt } from 'react-icons/hi';
-import { QRCodeCanvas } from 'qrcode.react';
+import { AnimatePresence, motion } from 'framer-motion';
 import html2canvas from 'html2canvas';
+import { QRCodeCanvas } from 'qrcode.react';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  FaDownload,
+  FaEnvelope,
+  FaGithub,
+  FaGlobe,
+  FaLinkedin,
+  FaPhone,
+  FaRegIdCard,
+  FaShare,
+  FaStar,
+  FaTimes
+} from 'react-icons/fa';
+import { HiOutlineLightningBolt, HiOutlineSparkles } from 'react-icons/hi';
 
 interface BusinessCardProps {
   name: string;

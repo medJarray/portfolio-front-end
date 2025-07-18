@@ -53,30 +53,30 @@ export const translateText = async (
 // Fonction pour formater les dates selon la langue
 const formatDate = (date: string, lang: string): string => {
   if (!date || date === 'Invalid Date') return '';
-  
+
   const dateObj = new Date(date);
-  const options: Intl.DateTimeFormatOptions = { 
-    year: 'numeric', 
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
     month: 'long'
   };
-  
+
   return new Intl.DateTimeFormat(lang, options).format(dateObj);
 };
 
 export const translateExperience = async (experience: any, targetLang: string) => {
   const translatedExperience = { ...experience };
-  
+
   // Traduire le titre
   translatedExperience.title = await translateText(experience.title, 'en', targetLang);
-  
+
   // Traduire l'entreprise
   translatedExperience.company = await translateText(experience.company, 'en', targetLang);
-  
+
   // Traduire la description
   if (experience.description) {
     translatedExperience.description = await translateText(experience.description, 'en', targetLang);
   }
-  
+
   // Traduire les responsabilités
   if (experience.responsibilities && Array.isArray(experience.responsibilities)) {
     translatedExperience.responsibilities = await Promise.all(
@@ -97,13 +97,13 @@ export const translateExperience = async (experience: any, targetLang: string) =
 
 export const translateDegree = async (degree: any, targetLang: string) => {
   const translatedDegree = { ...degree };
-  
+
   // Traduire le nom du diplôme
   translatedDegree.degree = await translateText(degree.degree, 'en', targetLang);
-  
+
   // Traduire l'institution
   translatedDegree.institution = await translateText(degree.institution, 'en', targetLang);
-  
+
   // Traduire la description
   if (degree.description) {
     translatedDegree.description = await translateText(degree.description, 'en', targetLang);

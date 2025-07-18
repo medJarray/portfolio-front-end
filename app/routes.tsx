@@ -1,8 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { Layout } from './Layout';
-import Home from './routes/index';
+import Home from './routes/home';
 import { AdminLayout } from './routes/admin.layout';
-import { AdminIndex } from './routes/admin.index';
+import AdminIndex from './routes/admin.index';
 import { AdminExperiences } from './routes/admin.experiences';
 import { AdminDegrees } from './routes/admin.degrees';
 import { AdminSkills } from './routes/admin.skills';
@@ -45,4 +45,4 @@ export const router = createBrowserRouter([
       }
     ]
   }
-]); 
+]);

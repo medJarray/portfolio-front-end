@@ -438,6 +438,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@floating-ui/core@npm:^1.7.2":
+  version: 1.7.2
+  resolution: "@floating-ui/core@npm:1.7.2"
+  dependencies:
+    "@floating-ui/utils": "npm:^0.2.10"
+  checksum: 10c0/ea5909ae1bfad6d8dd60ab893c7751fd974d96b25481d13805935a089b39881b4d69425a0a84cc74c82269d8b64ca0117c472fc83e425143bee1bb21b247de9c
+  languageName: node
+  linkType: hard
+
 "@floating-ui/dom@npm:^1.0.0":
   version: 1.7.1
   resolution: "@floating-ui/dom@npm:1.7.1"
@@ -445,6 +454,16 @@ __metadata:
     "@floating-ui/core": "npm:^1.7.1"
     "@floating-ui/utils": "npm:^0.2.9"
   checksum: 10c0/33b0e892f4c50ce568169cd58793ff5e3bc1e72ee007237d73b9458d4475e1e5f5a4b3f9e6752422d5f5ac902bc0c135ca7dc0a23c6df187fd9d28dc34cdceed
+  languageName: node
+  linkType: hard
+
+"@floating-ui/dom@npm:^1.7.2":
+  version: 1.7.2
+  resolution: "@floating-ui/dom@npm:1.7.2"
+  dependencies:
+    "@floating-ui/core": "npm:^1.7.2"
+    "@floating-ui/utils": "npm:^0.2.10"
+  checksum: 10c0/1b2ad76dc7fe245a1bb406cd5b64a1316f2ec642aebaa4d1928b56ced6fe71046f089e3fef9340bab234645b6333546211e363a630a9e7cfca6bf5031c39e0cb
   languageName: node
   linkType: hard
 
@@ -460,6 +479,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@floating-ui/react-dom@npm:^2.1.4":
+  version: 2.1.4
+  resolution: "@floating-ui/react-dom@npm:2.1.4"
+  dependencies:
+    "@floating-ui/dom": "npm:^1.7.2"
+  peerDependencies:
+    react: ">=16.8.0"
+    react-dom: ">=16.8.0"
+  checksum: 10c0/2dade6b8e18de09c90b876249756155ab31f49b5a81d246a3dc568d0355bc9e4bc26485dfd27b9e3bf86585700f4d241e8f53e8321249ec9b012a266a86b9366
+  languageName: node
+  linkType: hard
+
 "@floating-ui/react@npm:^0.26.16":
   version: 0.26.28
   resolution: "@floating-ui/react@npm:0.26.28"
@@ -471,6 +502,27 @@ __metadata:
     react: ">=16.8.0"
     react-dom: ">=16.8.0"
   checksum: 10c0/a42df129e1e976fe8ba3f4c8efdda265a0196c1b66b83f2b9b27423d08dcc765406f893aeff9d830e70e3f14a9d4c490867eb4c32983317cbaa33863b0fae6f6
+  languageName: node
+  linkType: hard
+
+"@floating-ui/react@npm:^0.27.3":
+  version: 0.27.13
+  resolution: "@floating-ui/react@npm:0.27.13"
+  dependencies:
+    "@floating-ui/react-dom": "npm:^2.1.4"
+    "@floating-ui/utils": "npm:^0.2.10"
+    tabbable: "npm:^6.0.0"
+  peerDependencies:
+    react: ">=17.0.0"
+    react-dom: ">=17.0.0"
+  checksum: 10c0/4f5dd45829e4c62f447718d07bcf88a2388efb78dd91e38a6f34091feecfa4044ff7b43357192cdad4acbfc3898b932527c2a320913c5f492bae998f34f9f57d
+  languageName: node
+  linkType: hard
+
+"@floating-ui/utils@npm:^0.2.10":
+  version: 0.2.10
+  resolution: "@floating-ui/utils@npm:0.2.10"
+  checksum: 10c0/e9bc2a1730ede1ee25843937e911ab6e846a733a4488623cd353f94721b05ec2c9ec6437613a2ac9379a94c2fd40c797a2ba6fa1df2716f5ce4aa6ddb1cf9ea4
   languageName: node
   linkType: hard
 
@@ -1168,6 +1220,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/react-datepicker@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "@types/react-datepicker@npm:7.0.0"
+  dependencies:
+    react-datepicker: "npm:*"
+  checksum: 10c0/8b9efb8841ed9bfb06e3157a2a4c5ed18fd7d6175cf760fb4fece99c0a53a55a5f27ea6484b62f548f2543cae349456c0f912d36243fe34251a25043ba4a1296
+  languageName: node
+  linkType: hard
+
 "@types/react-dom@npm:^19.1.2":
   version: 19.1.6
   resolution: "@types/react-dom@npm:19.1.6"
@@ -1370,7 +1431,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clsx@npm:^2.0.0":
+"clsx@npm:^2.0.0, clsx@npm:^2.1.1":
   version: 2.1.1
   resolution: "clsx@npm:2.1.1"
   checksum: 10c0/c4c8eb865f8c82baab07e71bfa8897c73454881c4f99d6bc81585aecd7c441746c1399d08363dc096c550cceaf97bd4ce1e8854e1771e9998d9f94c4fe075839
@@ -1440,6 +1501,13 @@ __metadata:
   version: 3.1.3
   resolution: "csstype@npm:3.1.3"
   checksum: 10c0/80c089d6f7e0c5b2bd83cf0539ab41474198579584fa10d86d0cafe0642202343cbc119e076a0b1aece191989477081415d66c9fefbf3c957fc2fc4b7009f248
+  languageName: node
+  linkType: hard
+
+"date-fns@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "date-fns@npm:4.1.0"
+  checksum: 10c0/b79ff32830e6b7faa009590af6ae0fb8c3fd9ffad46d930548fbb5acf473773b4712ae887e156ba91a7b3dc30591ce0f517d69fd83bd9c38650fdc03b4e0bac8
   languageName: node
   linkType: hard
 
@@ -2390,6 +2458,7 @@ __metadata:
     "@tsparticles/engine": "npm:^3.8.1"
     "@types/node": "npm:^20"
     "@types/react": "npm:^19.1.2"
+    "@types/react-datepicker": "npm:^7.0.0"
     "@types/react-dom": "npm:^19.1.2"
     "@vitejs/plugin-react": "npm:^4.5.2"
     autoprefixer: "npm:^10.4.21"
@@ -2403,12 +2472,13 @@ __metadata:
     postcss: "npm:^8.5.5"
     qrcode.react: "npm:^4.2.0"
     react: "npm:^19.1.0"
+    react-datepicker: "npm:^8.4.0"
     react-dom: "npm:^19.1.0"
     react-hook-form: "npm:^7.48.2"
-    react-hot-toast: "npm:^2.4.1"
+    react-hot-toast: "npm:^2.5.2"
     react-i18next: "npm:^15.5.3"
     react-icons: "npm:^5.5.0"
-    react-parallax-tilt: "npm:^1.7.298"
+    react-parallax-tilt: "npm:^1.7.300"
     react-redux: "npm:^9.0.4"
     react-router-dom: "npm:^7.6.2"
     react-tsparticles: "npm:^2.12.2"
@@ -2587,6 +2657,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-datepicker@npm:*, react-datepicker@npm:^8.4.0":
+  version: 8.4.0
+  resolution: "react-datepicker@npm:8.4.0"
+  dependencies:
+    "@floating-ui/react": "npm:^0.27.3"
+    clsx: "npm:^2.1.1"
+    date-fns: "npm:^4.1.0"
+  peerDependencies:
+    react: ^16.9.0 || ^17 || ^18 || ^19 || ^19.0.0-rc
+    react-dom: ^16.9.0 || ^17 || ^18 || ^19 || ^19.0.0-rc
+  checksum: 10c0/e96ba4f2b54476f66bfa33aa0c21729095c83d293671b07a9ddd96ab48dad85b6530acc5ca016e83ef8907feeebfefb7133bf7a02dc550175c48c5d9f66d70ac
+  languageName: node
+  linkType: hard
+
 "react-dom@npm:^19.1.0":
   version: 19.1.0
   resolution: "react-dom@npm:19.1.0"
@@ -2607,7 +2691,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-hot-toast@npm:^2.4.1":
+"react-hot-toast@npm:^2.5.2":
   version: 2.5.2
   resolution: "react-hot-toast@npm:2.5.2"
   dependencies:
@@ -2650,13 +2734,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-parallax-tilt@npm:^1.7.298":
-  version: 1.7.298
-  resolution: "react-parallax-tilt@npm:1.7.298"
+"react-parallax-tilt@npm:^1.7.300":
+  version: 1.7.300
+  resolution: "react-parallax-tilt@npm:1.7.300"
   peerDependencies:
     react: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
     react-dom: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-  checksum: 10c0/b2a7690140d143925aac8257d0956b01e759c2f7305ef42b1d059c299d7cd89e50a892a2716c6da0f9102ed8926f84c704b9377fbaa5a34af8e6610dc7e9e3aa
+  checksum: 10c0/98dd9649be91597d539d975b582c2e5fc5c0db7c749f8b2310eeab0ce83134f37115bde7b514fe64009b020f75e4bee426026199f88f773c8b51dd3fd23f8f3b
   languageName: node
   linkType: hard
 

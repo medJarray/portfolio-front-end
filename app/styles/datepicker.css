@@ -1,0 +1,37 @@
+@import 'react-datepicker/dist/react-datepicker.css';
+
+.react-datepicker__input-container input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #a5b4fc;
+  font-size: 1.125rem;
+  padding: 0.5rem 2.5rem 0.5rem 0.5rem;
+  color: #1e293b;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 4px 0 rgb(59 130 246 / 0.04);
+}
+
+.react-datepicker__input-container input:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: #f0f9ff;
+}
+
+.react-datepicker__triangle {
+  left: 50% !important;
+  transform: translateX(-50%);
+}
+
+.react-datepicker__header {
+  background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
+  color: #fff;
+}
+
+.react-datepicker__day--selected, .react-datepicker__day--keyboard-selected {
+  background: #6366f1;
+  color: #fff;
+}
+
+.react-datepicker__day--today {
+  border-bottom: 2px solid #6366f1;
+}
